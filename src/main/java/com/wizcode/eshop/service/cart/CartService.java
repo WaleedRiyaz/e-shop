@@ -34,10 +34,8 @@ public class CartService implements ICartService {
     @Override
     public void clearCart(Long id) {
         Cart cart = getCart(id);
-        cartItemRepository.deleteAllByCartId(id);
-        cart.getItems().clear();
-        cartRepository.deleteById(id);
-
+        cart.getItems().clear();  // JPA will delete items because of orphanRemoval
+        cartRepository.save(cart);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.wizcode.eshop.service.product;
 
 import com.wizcode.eshop.dto.ImageDTO;
 import com.wizcode.eshop.dto.ProductDTO;
+import com.wizcode.eshop.exception.AlreadyExistsException;
 import com.wizcode.eshop.exception.ProductNotFoundException;
 import com.wizcode.eshop.exception.ResourceNotFoundException;
 import com.wizcode.eshop.model.Category;
@@ -27,6 +28,9 @@ public class ProductService implements IProductService{
     private final ImageRepository imageRepository;
     private final ModelMapper modelMapper;
     public Product addProduct(AddProductRequest request) {
+        if (isProduct(request.getName(), request.getBrand()))
+            throw new AlreadyExistsException(request.getBrand() + " " + request.getName() + " already exists, you may update this product!");
+
         Category category = Optional.ofNullable(categoryRepository.findByName(request.getCategory().getName()))
                 .orElseGet(() -> {
                     Category newCategory = new Category(request.getCategory().getName());
@@ -47,6 +51,10 @@ public class ProductService implements IProductService{
                 request.getDescription(),
                 category
         );
+    }
+
+    private boolean isProduct(String name, String brand) {
+        return  productRepository.existsByNameAndBrand(name, brand);
     }
 
     @Override

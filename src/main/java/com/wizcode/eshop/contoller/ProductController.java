@@ -1,6 +1,7 @@
 package com.wizcode.eshop.contoller;
 
 import com.wizcode.eshop.dto.ProductDTO;
+import com.wizcode.eshop.exception.AlreadyExistsException;
 import com.wizcode.eshop.exception.ResourceNotFoundException;
 import com.wizcode.eshop.model.Product;
 import com.wizcode.eshop.request.AddProductRequest;
@@ -9,12 +10,12 @@ import com.wizcode.eshop.response.APIResponse;
 import com.wizcode.eshop.service.product.IProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("${api.prefix}/products")
@@ -40,17 +41,19 @@ public class ProductController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/add")
     public ResponseEntity<APIResponse> addProduct(@RequestBody AddProductRequest product) {
         try {
             Product theProduct = productService.addProduct(product);
             ProductDTO productDTO = productService.convertToDTO(theProduct);
             return ResponseEntity.ok(new APIResponse("Add product success!", productDTO));
-        } catch (Exception e) {
-            return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new APIResponse(e.getMessage(), null));
+        } catch (AlreadyExistsException e) {
+            return ResponseEntity.status(CONFLICT).body(new APIResponse(e.getMessage(), null));
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/product/{productId}/update")
     public  ResponseEntity<APIResponse> updateProduct(@RequestBody UpdateProductRequest request, @PathVariable Long productId) {
         try {
@@ -62,6 +65,7 @@ public class ProductController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/product/{productId}/delete")
     public ResponseEntity<APIResponse> deleteProduct(@PathVariable Long productId) {
         try {
